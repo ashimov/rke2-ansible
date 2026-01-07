@@ -1,12 +1,16 @@
 # Common/valid Slang
 [C|c]onfig
 airgap
+hardcoded
 
 # Acronyms
 STIG
 
 # Tools
 [A|a]nsible
+yamllint
+testinfra
+iptables
 
 # Kubernetes
 Kubernetes
@@ -16,3 +20,8 @@ Kubernetes
 [F|f]apolicyd
 containerd
 SELinux
+
+# Inventory names
+basic_sample_inventory
+advanced_sample_inventory
+tarball_sample_inventory

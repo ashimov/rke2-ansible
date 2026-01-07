@@ -6,8 +6,6 @@
 
 <p align="center">
   <a href="https://github.com/ashimov/rke2-ansible/actions/workflows/lint.yml"><img src="https://github.com/ashimov/rke2-ansible/actions/workflows/lint.yml/badge.svg" alt="Lint"></a>
-  <a href="https://github.com/ashimov/rke2-ansible/actions/workflows/rocky.yml"><img src="https://github.com/ashimov/rke2-ansible/actions/workflows/rocky.yml/badge.svg" alt="Rocky"></a>
-  <a href="https://github.com/ashimov/rke2-ansible/actions/workflows/ubuntu.yml"><img src="https://github.com/ashimov/rke2-ansible/actions/workflows/ubuntu.yml/badge.svg" alt="Ubuntu"></a>
 </p>
 
 <p align="center">

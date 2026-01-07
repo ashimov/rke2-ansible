@@ -6,8 +6,16 @@
 
 <p align="center">
   <a href="https://github.com/ashimov/rke2-ansible/actions/workflows/lint.yml"><img src="https://github.com/ashimov/rke2-ansible/actions/workflows/lint.yml/badge.svg" alt="Lint"></a>
-  <a href="https://github.com/ashimov/rke2-ansible/actions/workflows/rocky.yml"><img src="https://github.com/ashimov/rke2-ansible/actions/workflows/rocky.yml/badge.svg" alt="Rocky"></a>
-  <a href="https://github.com/ashimov/rke2-ansible/actions/workflows/ubuntu.yml"><img src="https://github.com/ashimov/rke2-ansible/actions/workflows/ubuntu.yml/badge.svg" alt="Ubuntu"></a>
+  <a href="https://github.com/ashimov/rke2-ansible/actions/workflows/release.yml"><img src="https://github.com/ashimov/rke2-ansible/actions/workflows/release.yml/badge.svg" alt="Release"></a>
+  <a href="https://github.com/ashimov/rke2-ansible/releases"><img src="https://img.shields.io/github/v/release/ashimov/rke2-ansible" alt="GitHub Release"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/ashimov/rke2-ansible" alt="License"></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/ansible-%3E%3D2.17-blue.svg" alt="Ansible">
+  <img src="https://img.shields.io/badge/python-%3E%3D3.10-blue.svg" alt="Python">
+  <a href="https://github.com/pre-commit/pre-commit"><img src="https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit" alt="pre-commit"></a>
+  <a href="./CONTRIBUTING.md"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" alt="Contributions Welcome"></a>
 </p>
 
 <p align="center">
@@ -78,8 +86,14 @@ ansible-playbook site.yml -i inventory/hosts.yml -b
 | Документ | Описание |
 |----------|----------|
 | [Руководство по конфигурации](./docs/README.ru.md) | Полный справочник по настройке |
+| [HA кластер](./docs/ha-cluster.ru.md) | Конфигурация высокодоступного кластера |
+| [Обновление кластера](./docs/upgrade.ru.md) | Процедуры обновления |
 | [Air-Gap установка](./docs/tarball_install.ru.md) | Установка в изолированных средах |
-| [Разработка](./docs/development.md) | Участие в разработке |
+| [Резервное копирование](./docs/backup-restore.ru.md) | Бэкап и аварийное восстановление |
+| [Мониторинг](./docs/monitoring.md) | Интеграция с Prometheus/Grafana |
+| [Cloud-Init](./docs/cloud-init.md) | Шаблоны подготовки узлов |
+| [Устранение неполадок](./docs/troubleshooting.ru.md) | Типичные проблемы и решения |
+| [Разработка](./docs/development.ru.md) | Участие в разработке |
 
 ## Методы установки
 

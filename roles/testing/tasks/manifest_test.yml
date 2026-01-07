@@ -1,0 +1,32 @@
+---
+# =============================================================================
+# Manifest Deployment Test
+# =============================================================================
+
+- name: Deploy test manifest
+  ansible.builtin.copy:
+    src: basic-deployment.yaml
+    dest: "{{ rke2_data_dir | default('/var/lib/rancher/rke2') }}/server/manifests/"
+    mode: "0644"
+    owner: root
+    group: root
+
+- name: Wait for pod deployment
+  ansible.builtin.pause:
+    seconds: 60
+
+- name: Check test pod status
+  ansible.builtin.command: >-
+    {{ rke2_bin_path | default('/var/lib/rancher/rke2/bin') }}/kubectl
+    --kubeconfig {{ rke2_kubeconfig_path | default('/etc/rancher/rke2/rke2.yaml') }}
+    get pod automated-testing-pod -o jsonpath='{.status.phase}'
+  register: _pod_status
+  delegate_to: "{{ groups['rke2_servers'][0] }}"
+  changed_when: false
+
+- name: Assert pod is running
+  ansible.builtin.assert:
+    that:
+      - _pod_status.stdout == "Running"
+    fail_msg: "Test pod is not running"
+    success_msg: "Test pod deployed successfully"

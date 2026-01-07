@@ -1,0 +1,23 @@
+---
+name: Rocky Integration Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  rocky-8:
+    name: Rocky Linux 8
+    uses: ./.github/workflows/reusable_integration_testing.yml
+    with:
+      os: rocky8
+      ssh_user: rocky
+    secrets: inherit
+
+  rocky-9:
+    name: Rocky Linux 9
+    uses: ./.github/workflows/reusable_integration_testing.yml
+    with:
+      os: rocky9
+      ssh_user: rocky
+    secrets: inherit

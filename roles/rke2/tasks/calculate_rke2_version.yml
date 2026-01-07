@@ -1,0 +1,48 @@
+---
+- name: Fetch latest version from internet
+  when:
+    - rke2_install_version | length == 0
+    - '"rpm.rancher.io" in rke2_versioned_yum_repo.baseurl'
+    - rke2_install_local_tarball_path == ""
+    - rke2_install_tarball_url == ""
+  block:
+    - name: Query RKE2 release channel
+      ansible.builtin.uri:
+        url: "https://update.rke2.io/v1-release/channels/{{ rke2_channel }}"
+        follow_redirects: safe
+      register: rke2_version_response
+
+    - name: Extract version from URL
+      ansible.builtin.set_fact:
+        rke2_full_version: "{{ rke2_version_response.url | basename }}"
+
+- name: Clear version if query was skipped
+  ansible.builtin.set_fact:
+    rke2_full_version: ""
+  when:
+    - rke2_full_version is not defined or rke2_full_version is skipped
+
+- name: Use specified version
+  ansible.builtin.set_fact:
+    rke2_full_version: "{{ rke2_install_version }}"
+  when:
+    - rke2_install_version | length > 0
+
+- name: Set package state to latest if no version specified
+  ansible.builtin.set_fact:
+    rke2_package_state: "latest"
+  when:
+    - rke2_full_version | default('') | length == 0
+
+- name: Calculate RPM version components
+  when:
+    - install_method == "rpm"
+    - rke2_full_version | default('') | length > 0
+  block:
+    - name: Extract major.minor version
+      ansible.builtin.set_fact:
+        rke2_version_majmin: "{{ rke2_full_version | regex_replace('^v?([0-9]+\\.[0-9]+).*', '\\1') }}"
+
+    - name: Convert version to RPM format
+      ansible.builtin.set_fact:
+        rke2_version_rpm: "-{{ rke2_full_version | regex_replace('^v', '') | regex_replace('[+-]', '~') }}"

@@ -1,0 +1,40 @@
+---
+# =============================================================================
+# Cluster Token Retrieval
+# =============================================================================
+
+- name: Wait for node token file
+  ansible.builtin.wait_for:
+    path: "{{ rke2_data_dir }}/server/node-token"
+  delegate_to: "{{ token_source_node }}"
+
+- name: Read node token from server
+  ansible.builtin.slurp:
+    src: "{{ rke2_data_dir }}/server/node-token"
+  register: _node_token
+  delegate_to: "{{ token_source_node }}"
+  no_log: true
+
+- name: Store node token
+  ansible.builtin.set_fact:
+    rke2_config_token: "{{ _node_token.content | b64decode | trim }}"
+  delegate_to: "{{ token_source_node }}"
+  no_log: true
+
+- name: Add token to host configuration
+  ansible.builtin.set_fact:
+    host_rke2_config: >-
+      {{ {'token': rke2_config_token}
+         | ansible.builtin.combine(host_rke2_config | default({}), list_merge='prepend_rp') }}
+  no_log: true
+
+- name: Set API server host if not defined
+  ansible.builtin.set_fact:
+    rke2_kubernetes_api_server_host: "{{ token_source_node }}"
+  when: rke2_kubernetes_api_server_host == ""
+
+- name: Add server URL to host configuration
+  ansible.builtin.set_fact:
+    host_rke2_config: >-
+      {{ {'server': 'https://' + rke2_kubernetes_api_server_host + ':' + (rke2_supervisor_port | string)}
+         | ansible.builtin.combine(host_rke2_config | default({}), list_merge='prepend_rp') }}

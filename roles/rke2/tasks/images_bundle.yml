@@ -1,0 +1,30 @@
+---
+# =============================================================================
+# Air-Gap Images Bundle
+# =============================================================================
+
+- name: Create images directory
+  ansible.builtin.file:
+    path: "{{ rke2_data_dir }}/agent/images"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Download images from URLs
+  ansible.builtin.get_url:
+    url: "{{ item }}"
+    dest: "{{ rke2_data_dir }}/agent/images/"
+    mode: "0644"
+  loop: "{{ rke2_images_urls }}"
+  when: rke2_images_urls | length > 0
+  notify: "Restart {{ service_name }}"
+
+- name: Copy local image tarballs
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ rke2_data_dir }}/agent/images/"
+    mode: "0644"
+  loop: "{{ rke2_images_local_tarball_path }}"
+  when: rke2_images_local_tarball_path | length > 0
+  notify: "Restart {{ service_name }}"

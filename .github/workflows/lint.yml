@@ -1,0 +1,73 @@
+---
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  ansible-lint:
+    name: Ansible Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip3 install ansible-lint ansible
+
+      - name: Version check
+        run: |
+          ansible --version
+          ansible-lint --version
+
+      - name: Run ansible-lint
+        run: ansible-lint --profile=production ./roles
+
+  yaml-lint:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install yamllint
+        run: pip3 install yamllint
+
+      - name: Version check
+        run: yamllint --version
+
+      - name: Run yamllint
+        run: yamllint .
+
+  vale-lint:
+    name: Vale Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the codebase
+        uses: actions/checkout@v4
+
+      - name: Install vale
+        run: sudo snap install vale
+
+      - name: Version check
+        run: vale --version
+
+      - name: Run vale
+        run: vale --glob='*.md' ./docs ./README.md ./README.ru.md

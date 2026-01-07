@@ -1,0 +1,25 @@
+---
+# =============================================================================
+# RKE2 Configuration File Generation
+# =============================================================================
+
+- name: Merge cluster and group configuration
+  ansible.builtin.set_fact:
+    _temp_group_config: >-
+      {{ cluster_rke2_config | default({})
+         | ansible.builtin.combine(group_rke2_config | default({}), list_merge='prepend_rp') }}
+
+- name: Merge with host configuration
+  ansible.builtin.set_fact:
+    rke2_config: >-
+      {{ _temp_group_config | default({})
+         | ansible.builtin.combine(host_rke2_config | default({}), list_merge='prepend_rp') }}
+
+- name: Write RKE2 configuration file
+  ansible.builtin.copy:
+    content: "{{ rke2_config | to_nice_yaml(indent=2) }}"
+    dest: "{{ rke2_config_dir }}/config.yaml"
+    mode: "0640"
+    owner: root
+    group: root
+  notify: "Restart {{ service_name }}"

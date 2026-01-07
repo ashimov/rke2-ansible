@@ -1,0 +1,22 @@
+---
+- name: Validate required inventory groups exist
+  ansible.builtin.assert:
+    that:
+      - "'rke2_servers' in groups"
+      - "groups['rke2_servers'] | length > 0"
+    fail_msg: "Inventory must contain 'rke2_servers' group with at least one host"
+    success_msg: "Inventory validation passed"
+  run_once: true
+  tags:
+    - always
+    - validation
+
+- name: Validate node belongs to a known group
+  ansible.builtin.assert:
+    that:
+      - inventory_hostname in groups['rke2_servers'] or inventory_hostname in groups.get('rke2_agents', [])
+    fail_msg: "Host {{ inventory_hostname }} must be in 'rke2_servers' or 'rke2_agents' group"
+    success_msg: "Host {{ inventory_hostname }} group membership validated"
+  tags:
+    - always
+    - validation

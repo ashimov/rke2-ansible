@@ -1,0 +1,185 @@
+---
+- name: Create temporary directory for tarball
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: .rke2-install
+    path: "{{ tarball_tmp_dir | default(omit) }}"
+  register: temp_dir
+
+- name: Set architecture variable
+  ansible.builtin.set_fact:
+    arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+
+- name: Check if version change is needed
+  ansible.builtin.set_fact:
+    rke2_version_changed: true
+  when:
+    - rke2_install_local_tarball_path == ""
+    - rke2_install_tarball_url == ""
+    - not rke2_installed or rke2_installed_version | default("") != rke2_full_version
+
+- name: Copy local tarball to remote host
+  ansible.builtin.copy:
+    src: "{{ rke2_install_local_tarball_path }}"
+    dest: "{{ temp_dir.path }}/rke2.linux-{{ arch }}.tar.gz"
+    mode: "0644"
+  when:
+    - rke2_install_local_tarball_path != ""
+
+- name: Download tarball from custom URL
+  ansible.builtin.get_url:
+    url: "{{ rke2_install_tarball_url }}"
+    dest: "{{ temp_dir.path }}/rke2.linux-{{ arch }}.tar.gz"
+    mode: "0644"
+  when:
+    - rke2_install_tarball_url != ""
+
+- name: Download tarball from GitHub releases
+  ansible.builtin.get_url:
+    url: "https://github.com/rancher/rke2/releases/download/{{ rke2_full_version }}/rke2.linux-{{ arch }}.tar.gz"
+    dest: "{{ temp_dir.path }}/rke2.linux-{{ arch }}.tar.gz"
+    mode: "0644"
+  when:
+    - rke2_install_local_tarball_path == ""
+    - rke2_install_tarball_url == ""
+    - rke2_version_changed
+
+- name: Ensure tar utility is installed
+  ansible.builtin.package:
+    name: tar
+    state: present
+  register: tar_install_result
+  failed_when:
+    - tar_install_result is failed
+    - "'tar' not in ansible_facts.packages"
+
+- name: Extract version from provided tarball
+  when:
+    - rke2_install_local_tarball_path != "" or rke2_install_tarball_url != ""
+  block:
+    - name: Extract tarball to temp location for version check
+      ansible.builtin.unarchive:
+        src: "{{ temp_dir.path }}/rke2.linux-{{ arch }}.tar.gz"
+        dest: "{{ temp_dir.path }}"
+        remote_src: true
+      changed_when: false
+
+    - name: Get RKE2 version from extracted tarball
+      ansible.builtin.command:
+        cmd: "{{ temp_dir.path }}/bin/rke2 --version"
+      register: rke2_tarball_version_output
+      changed_when: false
+
+    - name: Parse tarball RKE2 version
+      ansible.builtin.set_fact:
+        rke2_tarball_version: "{{ rke2_tarball_version_output.stdout | regex_search('rke2 version (v[0-9.]+\\+rke2r[0-9]+)', '\\1') | first }}"
+
+    - name: Check if tarball version differs from installed
+      ansible.builtin.set_fact:
+        rke2_version_changed: true
+      when:
+        - not rke2_installed or rke2_installed_version != rke2_tarball_version
+
+- name: Check if install directory is a mountpoint
+  ansible.builtin.command:
+    cmd: "mountpoint -q {{ rke2_tarball_install_dir }}"
+  register: mountpoint_check
+  failed_when: false
+  changed_when: false
+
+- name: Use /opt/rke2 if default directory is a mountpoint
+  ansible.builtin.set_fact:
+    rke2_tarball_install_dir: "/opt/rke2"
+  when: mountpoint_check.rc == 0
+
+- name: Create installation directory
+  ansible.builtin.file:
+    path: "{{ rke2_tarball_install_dir }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Install RKE2 from tarball
+  when:
+    - rke2_version_changed
+  block:
+    - name: Extract RKE2 tarball to installation directory
+      ansible.builtin.unarchive:
+        src: "{{ temp_dir.path }}/rke2.linux-{{ arch }}.tar.gz"
+        dest: "{{ rke2_tarball_install_dir }}"
+        remote_src: true
+
+    - name: Update rke2-server.service paths
+      ansible.builtin.replace:
+        path: "{{ rke2_tarball_install_dir }}/lib/systemd/system/rke2-server.service"
+        regexp: '/usr/local'
+        replace: '{{ rke2_tarball_install_dir }}'
+      notify: Restart rke2-server
+
+    - name: Update rke2-agent.service paths
+      ansible.builtin.replace:
+        path: "{{ rke2_tarball_install_dir }}/lib/systemd/system/rke2-agent.service"
+        regexp: '/usr/local'
+        replace: '{{ rke2_tarball_install_dir }}'
+      notify: Restart rke2-agent
+
+    - name: Update rke2-uninstall.sh paths
+      ansible.builtin.replace:
+        path: "{{ rke2_tarball_install_dir }}/bin/rke2-uninstall.sh"
+        regexp: '/usr/local'
+        replace: '{{ rke2_tarball_install_dir }}'
+
+    - name: Copy rke2-server.service to systemd
+      ansible.builtin.copy:
+        src: "{{ rke2_tarball_install_dir }}/lib/systemd/system/rke2-server.service"
+        dest: /etc/systemd/system/rke2-server.service
+        mode: "0644"
+        owner: root
+        group: root
+        remote_src: true
+      when:
+        - inventory_hostname in groups['rke2_servers']
+
+    - name: Copy rke2-server.env to systemd
+      ansible.builtin.copy:
+        src: "{{ rke2_tarball_install_dir }}/lib/systemd/system/rke2-server.env"
+        dest: /etc/systemd/system/rke2-server.env
+        mode: "0644"
+        owner: root
+        group: root
+        remote_src: true
+      when:
+        - inventory_hostname in groups['rke2_servers']
+
+    - name: Copy rke2-agent.service to systemd
+      ansible.builtin.copy:
+        src: "{{ rke2_tarball_install_dir }}/lib/systemd/system/rke2-agent.service"
+        dest: /etc/systemd/system/rke2-agent.service
+        mode: "0644"
+        owner: root
+        group: root
+        remote_src: true
+      when:
+        - inventory_hostname in groups.get('rke2_agents', [])
+
+    - name: Copy rke2-agent.env to systemd
+      ansible.builtin.copy:
+        src: "{{ rke2_tarball_install_dir }}/lib/systemd/system/rke2-agent.env"
+        dest: /etc/systemd/system/rke2-agent.env
+        mode: "0644"
+        owner: root
+        group: root
+        remote_src: true
+      when:
+        - inventory_hostname in groups.get('rke2_agents', [])
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+- name: Clean up temporary directory
+  ansible.builtin.file:
+    path: "{{ temp_dir.path }}"
+    state: absent
+  when: temp_dir.path is defined

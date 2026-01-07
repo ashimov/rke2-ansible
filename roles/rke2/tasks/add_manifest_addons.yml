@@ -1,0 +1,35 @@
+---
+- name: Find manifest files on control node
+  ansible.builtin.find:
+    paths: "{{ source_directory }}"
+  register: local_manifests
+  delegate_to: localhost
+  become: false
+
+- name: Build list of managed manifest files
+  ansible.builtin.set_fact:
+    managed_files: "{{ local_manifests.files | map(attribute='path') | map('basename') | list }}"
+
+- name: Copy manifests to target server
+  ansible.builtin.copy:
+    src: "{{ source_directory | regex_replace('/$', '') }}/"
+    dest: "{{ destination_directory }}"
+    mode: "0640"
+    owner: root
+    group: root
+
+- name: Find existing manifest files on target
+  ansible.builtin.find:
+    paths: "{{ destination_directory }}"
+  register: remote_manifests
+
+- name: Build list of current manifest files
+  ansible.builtin.set_fact:
+    current_files: "{{ remote_manifests.files | map(attribute='path') | map('basename') | list }}"
+
+- name: Remove unmanaged manifest files
+  ansible.builtin.file:
+    path: "{{ destination_directory }}/{{ item }}"
+    state: absent
+  loop: "{{ current_files }}"
+  when: item not in managed_files

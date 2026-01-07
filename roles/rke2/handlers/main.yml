@@ -1,0 +1,57 @@
+---
+# =============================================================================
+# RKE2 Role Handlers
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# System Services
+# -----------------------------------------------------------------------------
+- name: Restart systemd-sysctl
+  ansible.builtin.systemd:
+    name: systemd-sysctl
+    state: restarted
+  when: not rke2_reboot
+
+- name: Restart fapolicyd
+  ansible.builtin.systemd:
+    name: fapolicyd
+    state: restarted
+  when: not rke2_reboot
+
+- name: Reload NetworkManager
+  ansible.builtin.systemd:
+    name: NetworkManager
+    state: reloaded
+  when: not rke2_reboot
+
+# -----------------------------------------------------------------------------
+# RKE2 Services (throttled for rolling updates)
+# -----------------------------------------------------------------------------
+- name: Restart rke2-server
+  ansible.builtin.systemd:
+    name: rke2-server
+    state: restarted
+    enabled: true
+  throttle: 1
+  when:
+    - not rke2_reboot
+    - "'rke2_servers' in group_names"
+
+- name: Restart rke2-agent
+  ansible.builtin.systemd:
+    name: rke2-agent
+    state: restarted
+    enabled: true
+  throttle: 1
+  when:
+    - not rke2_reboot
+    - "'rke2_agents' in group_names"
+
+# -----------------------------------------------------------------------------
+# Machine Reboot
+# -----------------------------------------------------------------------------
+- name: Reboot the machine
+  ansible.builtin.reboot:
+    reboot_timeout: "{{ rke2_reboot_timeout }}"
+  throttle: 1
+  when: rke2_reboot

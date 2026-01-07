@@ -1,0 +1,34 @@
+---
+- name: Disable firewalld service
+  ansible.builtin.systemd:
+    name: firewalld
+    state: stopped
+    enabled: false
+  when:
+    - ansible_facts.services["firewalld.service"] is defined
+    - ansible_facts.services["firewalld.service"].status != "not-found"
+  notify: "Restart {{ service_name }}"
+
+- name: Apply NetworkManager configuration
+  ansible.builtin.include_tasks: network_manager_fix.yaml
+
+- name: Configure iptables rules
+  ansible.builtin.include_tasks: iptables_rules.yml
+  when:
+    - rke2_add_iptables_rules | bool
+
+- name: Configure fapolicyd rules for RKE2
+  ansible.builtin.copy:
+    content: |
+      allow perm=any all : dir=/var/lib/rancher/
+      allow perm=any all : dir=/opt/cni/
+      allow perm=any all : dir=/run/k3s/
+      allow perm=any all : dir=/var/lib/kubelet/
+    dest: /etc/fapolicyd/rules.d/80-rke2.rules
+    mode: "0644"
+    owner: root
+    group: fapolicyd
+  when:
+    - ansible_facts.services["fapolicyd.service"] is defined
+    - ansible_facts.services["fapolicyd.service"].state == "running"
+  notify: Restart fapolicyd

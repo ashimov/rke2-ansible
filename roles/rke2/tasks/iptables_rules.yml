@@ -1,0 +1,118 @@
+---
+# =============================================================================
+# RKE2 iptables Rules Configuration
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Server-only Rules (control plane)
+# -----------------------------------------------------------------------------
+- name: Add server iptables rules
+  ansible.builtin.iptables:
+    action: insert
+    chain: INPUT
+    protocol: "{{ item.proto }}"
+    destination_port: "{{ item.port }}"
+    ctstate: NEW
+    jump: ACCEPT
+    comment: "RKE2: {{ item.desc }}"
+  loop:
+    - { port: "{{ rke2_supervisor_port }}", proto: tcp, desc: "supervisor API" }
+    - { port: "{{ rke2_api_port }}", proto: tcp, desc: "Kubernetes API" }
+    - { port: "{{ rke2_etcd_client_port }}", proto: tcp, desc: "etcd client" }
+    - { port: "{{ rke2_etcd_peer_port }}", proto: tcp, desc: "etcd peer" }
+  loop_control:
+    label: "{{ item.desc }} ({{ item.proto }}/{{ item.port }})"
+  when: inventory_hostname in groups['rke2_servers']
+
+# -----------------------------------------------------------------------------
+# Common Rules (all nodes)
+# -----------------------------------------------------------------------------
+- name: Add common iptables rules
+  ansible.builtin.iptables:
+    action: insert
+    chain: INPUT
+    protocol: "{{ item.proto }}"
+    destination_port: "{{ item.port }}"
+    ctstate: NEW
+    jump: ACCEPT
+    comment: "RKE2: {{ item.desc }}"
+  loop:
+    - { port: "{{ rke2_flannel_port }}", proto: udp, desc: "Flannel VXLAN" }
+    - { port: "{{ rke2_kubelet_port }}", proto: tcp, desc: "Kubelet API" }
+    - { port: "{{ rke2_nodeport_range }}", proto: tcp, desc: "NodePort services" }
+    - { port: "443", proto: tcp, desc: "HTTPS" }
+  loop_control:
+    label: "{{ item.desc }} ({{ item.proto }}/{{ item.port }})"
+
+# -----------------------------------------------------------------------------
+# Cluster CIDR Rules
+# -----------------------------------------------------------------------------
+- name: Add cluster CIDR forward rules
+  ansible.builtin.iptables:
+    action: insert
+    chain: FORWARD
+    source: "{{ item.src | default(omit) }}"
+    destination: "{{ item.dst | default(omit) }}"
+    jump: ACCEPT
+    comment: "RKE2: cluster CIDR {{ item.dir }}"
+  loop:
+    - { src: "{{ rke2_cluster_cidr }}", dir: "source" }
+    - { dst: "{{ rke2_cluster_cidr }}", dir: "destination" }
+  loop_control:
+    label: "FORWARD {{ item.dir }}"
+
+- name: Add cluster CIDR input rules
+  ansible.builtin.iptables:
+    action: insert
+    chain: INPUT
+    source: "{{ item.src | default(omit) }}"
+    destination: "{{ item.dst | default(omit) }}"
+    jump: ACCEPT
+    comment: "RKE2: cluster CIDR {{ item.dir }}"
+  loop:
+    - { src: "{{ rke2_cluster_cidr }}", dir: "source" }
+    - { dst: "{{ rke2_cluster_cidr }}", dir: "destination" }
+  loop_control:
+    label: "INPUT {{ item.dir }}"
+
+# -----------------------------------------------------------------------------
+# Persist Rules
+# -----------------------------------------------------------------------------
+- name: Persist iptables rules (RedHat)
+  when: ansible_facts['os_family'] == 'RedHat'
+  block:
+    - name: Export iptables rules
+      ansible.builtin.command:
+        cmd: iptables-save
+      register: _iptables_rules
+      changed_when: false
+
+    - name: Write rules to persistent file
+      ansible.builtin.copy:
+        content: "{{ _iptables_rules.stdout }}\n"
+        dest: /etc/sysconfig/iptables
+        mode: "0600"
+        owner: root
+        group: root
+
+- name: Persist iptables rules (Debian)
+  when: ansible_facts['os_family'] == 'Debian'
+  block:
+    - name: Install iptables-persistent
+      ansible.builtin.apt:
+        name: iptables-persistent
+        state: present
+
+    - name: Export iptables rules
+      ansible.builtin.command:
+        cmd: iptables-save
+      register: _iptables_rules
+      changed_when: false
+
+    - name: Write rules to persistent file
+      ansible.builtin.copy:
+        content: "{{ _iptables_rules.stdout }}\n"
+        dest: /etc/iptables/rules.v4
+        mode: "0600"
+        owner: root
+        group: root

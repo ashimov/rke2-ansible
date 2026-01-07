@@ -1,0 +1,21 @@
+---
+# =============================================================================
+# Additional Nodes Join
+# =============================================================================
+
+- name: Wait for remote Kubernetes API server
+  ansible.builtin.wait_for:
+    host: "{{ rke2_kubernetes_api_server_host }}"
+    port: "{{ rke2_api_port }}"
+    state: present
+    timeout: "{{ rke2_api_wait_timeout }}"
+  changed_when: false
+
+- name: Generate RKE2 configuration
+  ansible.builtin.include_tasks: config.yml
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure RKE2 service is running
+  ansible.builtin.include_tasks: common/ensure_service.yml

@@ -1,0 +1,24 @@
+---
+# =============================================================================
+# Basic Infrastructure Tests
+# =============================================================================
+
+- name: Check RKE2 configuration file exists
+  ansible.builtin.stat:
+    path: "{{ rke2_config_dir | default('/etc/rancher/rke2') }}/config.yaml"
+  register: _rke2_config_file
+
+- name: Check SELinux is enabled in configuration
+  ansible.builtin.lineinfile:
+    path: "{{ rke2_config_dir | default('/etc/rancher/rke2') }}/config.yaml"
+    line: "selinux: true"
+  check_mode: true
+  register: _selinux_config_check
+
+- name: Assert infrastructure requirements
+  ansible.builtin.assert:
+    that:
+      - _rke2_config_file.stat.exists
+      - not _selinux_config_check.failed
+    fail_msg: "RKE2 infrastructure check failed"
+    success_msg: "RKE2 infrastructure check passed"

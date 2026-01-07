@@ -1,0 +1,28 @@
+---
+# =============================================================================
+# First Server Bootstrap
+# =============================================================================
+
+- name: Generate RKE2 configuration
+  ansible.builtin.include_tasks: config.yml
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure RKE2 server is running
+  ansible.builtin.include_tasks: common/ensure_service.yml
+
+- name: Verify first server is ready
+  any_errors_fatal: true
+  block:
+    - name: Check node readiness
+      ansible.builtin.include_tasks: check_node_ready.yml
+      vars:
+        _check_retries: "{{ rke2_node_ready_retries }}"
+        _check_delay: "{{ rke2_node_ready_delay }}"
+        _check_ignore_errors: false
+
+    - name: Fail if node not ready
+      ansible.builtin.fail:
+        msg: "First server node failed to become ready"
+      when: not rke2_node_ready

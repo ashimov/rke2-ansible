@@ -1,0 +1,67 @@
+---
+# =============================================================================
+# Node Readiness Check
+# =============================================================================
+# Variables (override with vars when including):
+#   _check_timeout: API wait timeout (default: rke2_api_wait_timeout)
+#   _check_retries: Retry count (default: rke2_node_ready_retries)
+#   _check_delay: Delay between retries (default: rke2_node_ready_delay)
+#   _check_ignore_errors: Ignore failures (default: false)
+# =============================================================================
+
+- name: Wait for Kubernetes API server
+  ansible.builtin.wait_for:
+    host: localhost
+    port: "{{ rke2_api_port }}"
+    state: present
+    timeout: "{{ _check_timeout | default(rke2_api_wait_timeout) }}"
+  changed_when: false
+  register: _api_status
+  ignore_errors: "{{ _check_ignore_errors | default(false) }}"
+
+- name: Set API server running status
+  ansible.builtin.set_fact:
+    rke2_api_server_running: "{{ _api_status.state | default('') == 'present' }}"
+
+- name: Get node metrics from kubelet
+  ansible.builtin.uri:
+    url: "https://localhost:{{ rke2_kubelet_port }}/metrics"
+    return_content: true
+    ca_path: "{{ rke2_data_dir }}/server/tls/server-ca.crt"
+    client_cert: "{{ rke2_data_dir }}/server/tls/client-admin.crt"
+    client_key: "{{ rke2_data_dir }}/server/tls/client-admin.key"
+  register: _node_metrics
+  retries: "{{ _check_retries | default(rke2_node_ready_retries) }}"
+  delay: "{{ _check_delay | default(rke2_node_ready_delay) }}"
+  ignore_errors: "{{ _check_ignore_errors | default(false) }}"
+
+- name: Set metrics running status
+  ansible.builtin.set_fact:
+    rke2_metrics_running: "{{ _node_metrics.status | default(0) == 200 }}"
+
+- name: Extract kubelet node name from metrics
+  ansible.builtin.set_fact:
+    rke2_kubelet_node_name: >-
+      {{ _node_metrics.content | regex_search('kubelet_node_name{node="([^"]+)"', '\1') }}
+  when: rke2_metrics_running
+
+- name: Wait for node Ready status
+  ansible.builtin.command: >-
+    {{ rke2_bin_path }}/kubectl
+    --kubeconfig {{ rke2_kubeconfig_path }}
+    --server https://127.0.0.1:{{ rke2_api_port }}
+    get node {{ rke2_kubelet_node_name | first }}
+    -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  register: _node_status
+  until: _node_status.stdout == "True"
+  retries: "{{ _check_retries | default(rke2_node_ready_retries) }}"
+  delay: "{{ _check_delay | default(rke2_node_ready_delay) }}"
+  changed_when: false
+  ignore_errors: "{{ _check_ignore_errors | default(false) }}"
+  when:
+    - rke2_metrics_running
+    - rke2_kubelet_node_name | length > 0
+
+- name: Set node ready status
+  ansible.builtin.set_fact:
+    rke2_node_ready: "{{ _node_status.rc | default(1) == 0 }}"

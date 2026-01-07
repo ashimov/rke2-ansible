@@ -1,0 +1,23 @@
+---
+name: Ubuntu Integration Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ubuntu-22:
+    name: Ubuntu 22.04
+    uses: ./.github/workflows/reusable_integration_testing.yml
+    with:
+      os: ubuntu22
+      ssh_user: ubuntu
+    secrets: inherit
+
+  ubuntu-24:
+    name: Ubuntu 24.04
+    uses: ./.github/workflows/reusable_integration_testing.yml
+    with:
+      os: ubuntu24
+      ssh_user: ubuntu
+    secrets: inherit

@@ -1,0 +1,49 @@
+---
+# =============================================================================
+# Troubleshooting Diagnostics
+# =============================================================================
+
+- name: Collect system journal logs
+  ansible.builtin.command:
+    cmd: journalctl -e --lines 200 --no-pager
+  register: _system_logs
+  changed_when: false
+  failed_when: false
+  tags:
+    - troubleshooting
+
+- name: Display system journal logs
+  ansible.builtin.debug:
+    var: _system_logs.stdout_lines
+  tags:
+    - troubleshooting
+
+- name: Collect RKE2 server logs
+  ansible.builtin.command:
+    cmd: journalctl -eu rke2-server --lines 200 --no-pager
+  register: _rke2_logs
+  changed_when: false
+  failed_when: false
+  tags:
+    - troubleshooting
+
+- name: Display RKE2 server logs
+  ansible.builtin.debug:
+    var: _rke2_logs.stdout_lines
+  tags:
+    - troubleshooting
+
+- name: Read RKE2 configuration
+  ansible.builtin.slurp:
+    src: "{{ rke2_config_dir | default('/etc/rancher/rke2') }}/config.yaml"
+  register: _rke2_config
+  failed_when: false
+  tags:
+    - troubleshooting
+
+- name: Display RKE2 configuration
+  ansible.builtin.debug:
+    msg: "{{ _rke2_config.content | b64decode | split('\n') }}"
+  when: _rke2_config.content is defined
+  tags:
+    - troubleshooting

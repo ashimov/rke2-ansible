@@ -1,0 +1,52 @@
+---
+# =============================================================================
+# RKE2 Configuration
+# =============================================================================
+
+- name: Create RKE2 configuration directory
+  ansible.builtin.file:
+    path: "{{ rke2_config_dir }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Apply CIS hardening configuration
+  ansible.builtin.include_tasks: cis_hardening.yml
+
+# -----------------------------------------------------------------------------
+# Optional Configuration Files
+# -----------------------------------------------------------------------------
+- name: Configure systemd environment
+  ansible.builtin.include_tasks: add_ansible_managed_config.yml
+  vars:
+    file_contents: "{{ lookup('file', rke2_systemd_env_config_file_path) }}"
+    file_destination: "/etc/default/{{ service_name }}"
+    file_description: "systemd environment"
+    file_path: "{{ rke2_systemd_env_config_file_path }}"
+
+- name: Configure container registry
+  ansible.builtin.include_tasks: add_ansible_managed_config.yml
+  vars:
+    file_contents: "{{ lookup('file', rke2_registry_config_file_path) }}"
+    file_destination: "{{ rke2_config_dir }}/registries.yaml"
+    file_description: "registry configuration"
+    file_path: "{{ rke2_registry_config_file_path }}"
+
+- name: Configure audit policy
+  ansible.builtin.include_tasks: add_ansible_managed_config.yml
+  vars:
+    file_contents: "{{ lookup('file', rke2_audit_policy_config_file_path) }}"
+    file_destination: "{{ rke2_config_dir }}/audit-policy.yaml"
+    file_description: "audit policy"
+    file_path: "{{ rke2_audit_policy_config_file_path }}"
+  when: inventory_hostname in groups['rke2_servers']
+
+- name: Configure pod security admission
+  ansible.builtin.include_tasks: add_ansible_managed_config.yml
+  vars:
+    file_contents: "{{ lookup('file', rke2_pod_security_admission_config_file_path) }}"
+    file_destination: "{{ rke2_config_dir }}/pod-security-admission-config.yaml"
+    file_description: "pod security admission"
+    file_path: "{{ rke2_pod_security_admission_config_file_path }}"
+  when: inventory_hostname in groups['rke2_servers']

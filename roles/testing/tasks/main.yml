@@ -1,0 +1,29 @@
+---
+# =============================================================================
+# RKE2 Testing Role - Main Orchestration
+# =============================================================================
+
+- name: Run infrastructure tests
+  ansible.builtin.include_tasks: basic_tests.yml
+  tags:
+    - tests
+    - infrastructure
+
+- name: Run manifest deployment test
+  ansible.builtin.include_tasks: manifest_test.yml
+  when: inventory_hostname == groups['rke2_servers'][0]
+  tags:
+    - tests
+    - manifests
+
+- name: Run kubectl tests
+  ansible.builtin.include_tasks: kubectl_basic.yml
+  tags:
+    - tests
+    - kubectl
+
+- name: Run troubleshooting diagnostics
+  ansible.builtin.include_tasks: troubleshooting.yml
+  tags:
+    - troubleshooting
+    - never

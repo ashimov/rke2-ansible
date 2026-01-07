@@ -1,0 +1,39 @@
+---
+# =============================================================================
+# Kubectl Connectivity Tests
+# =============================================================================
+
+- name: Verify kubelet process is running
+  ansible.builtin.command:
+    cmd: ps -C kubelet -F -ww --no-headers
+  register: _kubelet_process
+  until: _kubelet_process.rc == 0
+  retries: "{{ rke2_kubelet_check_retries | default(20) }}"
+  delay: "{{ rke2_kubelet_check_delay | default(10) }}"
+  changed_when: false
+
+- name: Extract hostname-override from kubelet
+  ansible.builtin.set_fact:
+    _kubelet_hostname: >-
+      {{ _kubelet_process.stdout | regex_search('--hostname-override=([^\s]+)', '\1') | first | default('') }}
+
+- name: Verify node is in Ready state
+  ansible.builtin.command: >-
+    {{ rke2_bin_path | default('/var/lib/rancher/rke2/bin') }}/kubectl
+    --kubeconfig {{ rke2_kubeconfig_path | default('/etc/rancher/rke2/rke2.yaml') }}
+    --server https://127.0.0.1:{{ rke2_api_port | default(6443) }}
+    get node {{ _kubelet_hostname }}
+    -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  register: _node_status
+  until: _node_status.stdout == "True"
+  retries: "{{ rke2_node_ready_retries | default(20) }}"
+  delay: "{{ rke2_node_ready_delay | default(10) }}"
+  delegate_to: "{{ groups['rke2_servers'][0] }}"
+  changed_when: false
+
+- name: Assert node is ready
+  ansible.builtin.assert:
+    that:
+      - _node_status.stdout == "True"
+    fail_msg: "Node is not in Ready state"
+    success_msg: "Node is in Ready state"

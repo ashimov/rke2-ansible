@@ -1,0 +1,38 @@
+---
+- name: Deploy configuration file
+  ansible.builtin.template:
+    src: ansible_managed_yaml.j2
+    dest: "{{ file_destination }}"
+    mode: "0640"
+    owner: root
+    group: root
+  when:
+    - file_path | default("") | length > 0
+  notify: "Restart {{ service_name }}"
+
+- name: Remove unconfigured file
+  when:
+    - file_path | default("") | length == 0
+  block:
+    - name: Check if file exists
+      ansible.builtin.stat:
+        path: "{{ file_destination }}"
+      register: config_file_stat
+
+    - name: Check for Ansible managed marker
+      ansible.builtin.lineinfile:
+        path: "{{ file_destination }}"
+        line: '## This is an Ansible managed file, contents will be overwritten ##'
+        state: present
+      check_mode: true
+      register: ansible_managed_check
+      when: config_file_stat.stat.exists
+
+    - name: Remove Ansible managed file
+      ansible.builtin.file:
+        path: "{{ file_destination }}"
+        state: absent
+      when:
+        - config_file_stat.stat.exists
+        - not ansible_managed_check.changed
+      notify: "Restart {{ service_name }}"

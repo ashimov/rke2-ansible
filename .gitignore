@@ -1,0 +1,93 @@
+# =============================================================================
+# Ansible
+# =============================================================================
+*.retry
+.cache/
+*.tar.gz
+
+# Collection build artifacts
+.ansible/
+
+# Local inventory files
+inventory*
+test_inventory*
+hosts.yml
+hosts.yaml
+
+# Sample files (keep README)
+sample_files/tarball_install/*
+!sample_files/tarball_install/README.md
+
+# =============================================================================
+# Python
+# =============================================================================
+venv/
+.venv/
+env/
+.env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# =============================================================================
+# Terraform (testing infrastructure)
+# =============================================================================
+testing/.terraform/
+testing/.terraform.lock.hcl
+testing/*.tfstate
+testing/*.tfstate.*
+testing/*.tfvars
+testing/.key
+
+# =============================================================================
+# IDE and Editors
+# =============================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# =============================================================================
+# OS Generated
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =============================================================================
+# Secrets and Keys
+# =============================================================================
+*.pem
+*.key
+!.github/**/*.key
+.key
+id_rsa*
+*.crt
+secrets.yml
+vault.yml
+*vault*.yml
+
+# =============================================================================
+# Logs
+# =============================================================================
+*.log
+logs/

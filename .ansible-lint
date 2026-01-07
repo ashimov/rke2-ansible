@@ -1,0 +1,14 @@
+---
+exclude_paths:
+  - .github/
+  - molecule/
+  - docs/
+
+warn_list:
+  - no-handler
+  - name[template]
+
+skip_list:
+  - experimental
+  - yaml[line-length]
+  - var-naming[no-role-prefix]

@@ -45,7 +45,7 @@
       ansible.builtin.set_fact:
         rke2_install_method: rpm
       when:
-        - ansible_os_family == 'RedHat'
+        - ansible_facts['os_family'] == 'RedHat'
         - rke2_install_local_tarball_path | length == 0
         - rke2_install_tarball_url | length == 0
         - not rke2_force_tarball_install | bool
@@ -99,9 +99,9 @@
     - name: Check server node readiness
       ansible.builtin.include_tasks: check_node_ready.yml
       vars:
-        _check_timeout: 2
-        _check_retries: 2
-        _check_delay: 2
+        _check_timeout: 5
+        _check_retries: 3
+        _check_delay: 3
         _check_ignore_errors: true
       when: inventory_hostname in groups['rke2_servers']
 

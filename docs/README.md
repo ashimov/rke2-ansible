@@ -404,6 +404,7 @@ ansible-playbook site.yml -i inventory/ --skip-tags hardening
 |----------|---------|-------------|
 | `rke2_api_port` | `6443` | Kubernetes API port |
 | `rke2_supervisor_port` | `9345` | Supervisor API port |
+| `rke2_https_port` | `443` | HTTPS ingress port (for iptables rules) |
 | `rke2_add_iptables_rules` | `false` | Auto-add iptables rules |
 
 ### Timeouts

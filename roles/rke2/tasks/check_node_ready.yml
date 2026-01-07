@@ -46,12 +46,14 @@
   when: rke2_metrics_running
 
 - name: Wait for node Ready status
-  ansible.builtin.command: >-
-    {{ rke2_bin_path }}/kubectl
-    --kubeconfig {{ rke2_kubeconfig_path }}
-    --server https://127.0.0.1:{{ rke2_api_port }}
-    get node {{ rke2_kubelet_node_name | first }}
-    -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  ansible.builtin.command:
+    cmd: >-
+      {{ rke2_bin_path }}/kubectl
+      --kubeconfig {{ rke2_kubeconfig_path }}
+      --server https://127.0.0.1:{{ rke2_api_port }}
+      --request-timeout=10s
+      get node {{ rke2_kubelet_node_name | first }}
+      -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
   register: _node_status
   until: _node_status.stdout == "True"
   retries: "{{ _check_retries | default(rke2_node_ready_retries) }}"

@@ -40,7 +40,7 @@
     - { port: "{{ rke2_flannel_port }}", proto: udp, desc: "Flannel VXLAN" }
     - { port: "{{ rke2_kubelet_port }}", proto: tcp, desc: "Kubelet API" }
     - { port: "{{ rke2_nodeport_range }}", proto: tcp, desc: "NodePort services" }
-    - { port: "443", proto: tcp, desc: "HTTPS" }
+    - { port: "{{ rke2_https_port }}", proto: tcp, desc: "HTTPS ingress" }
   loop_control:
     label: "{{ item.desc }} ({{ item.proto }}/{{ item.port }})"
 

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: RKE2 Documentation
+    url: https://docs.rke2.io/
+    about: Official RKE2 documentation from Rancher
+  - name: Project Documentation
+    url: https://github.com/ashimov/rke2-ansible/tree/main/docs
+    about: This project's documentation and guides
+  - name: Troubleshooting Guide
+    url: https://github.com/ashimov/rke2-ansible/blob/main/docs/troubleshooting.md
+    about: Common issues and solutions

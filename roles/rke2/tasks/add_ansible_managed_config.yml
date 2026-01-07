@@ -20,12 +20,11 @@
       register: config_file_stat
 
     - name: Check for Ansible managed marker
-      ansible.builtin.lineinfile:
-        path: "{{ file_destination }}"
-        line: '## This is an Ansible managed file, contents will be overwritten ##'
-        state: present
-      check_mode: true
+      ansible.builtin.command:
+        cmd: grep -q '## This is an Ansible managed file' "{{ file_destination }}"
       register: ansible_managed_check
+      changed_when: false
+      failed_when: false
       when: config_file_stat.stat.exists
 
     - name: Remove Ansible managed file
@@ -34,5 +33,5 @@
         state: absent
       when:
         - config_file_stat.stat.exists
-        - not ansible_managed_check.changed
+        - ansible_managed_check.rc == 0
       notify: "Restart {{ service_name }}"

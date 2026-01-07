@@ -37,7 +37,7 @@
   ansible.builtin.stat:
     path: "{{ rke2_tarball_install_dir }}/bin/rke2"
   register: rke2_binary
-  when: install_method == "tarball"
+  when: rke2_install_method == "tarball"
 
 - name: Get current RKE2 version
   ansible.builtin.command:
@@ -51,7 +51,7 @@
 
 - name: Parse installed RKE2 version
   ansible.builtin.set_fact:
-    rke2_installed_version: "{{ rke2_version_output.stdout | regex_search('rke2 version (v[0-9.]+\\+rke2r[0-9]+)', '\\1') | first | default('') }}"
+    rke2_installed_version: "{{ rke2_version_output.stdout | regex_search('rke2 version (v[0-9.]+[-+]rke2r[0-9]+[^ ]*)', '\\1') | first | default('') }}"
   when:
     - rke2_install_method == "tarball"
     - rke2_binary.stat.exists | default(false)

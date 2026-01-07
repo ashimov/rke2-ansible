@@ -6,8 +6,8 @@
 - name: Add RKE2 binaries to PATH
   ansible.builtin.lineinfile:
     path: /root/.bashrc
+    regexp: '^export PATH=.*{{ rke2_bin_path | regex_escape }}.*$'
     line: "export PATH=$PATH:{{ rke2_bin_path }}"
-    insertafter: EOF
     create: true
     mode: "0600"
 

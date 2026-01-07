@@ -64,6 +64,32 @@
     - validation
 
 # -----------------------------------------------------------------------------
+# Port Validation
+# -----------------------------------------------------------------------------
+- name: Validate port values are within acceptable range
+  ansible.builtin.assert:
+    that:
+      - rke2_api_port | int >= 1
+      - rke2_api_port | int <= 65535
+      - rke2_supervisor_port | int >= 1
+      - rke2_supervisor_port | int <= 65535
+      - rke2_kubelet_port | int >= 1
+      - rke2_kubelet_port | int <= 65535
+      - rke2_https_port | int >= 1
+      - rke2_https_port | int <= 65535
+    fail_msg: |
+      Port values out of acceptable range (1-65535):
+        - rke2_api_port: {{ rke2_api_port }}
+        - rke2_supervisor_port: {{ rke2_supervisor_port }}
+        - rke2_kubelet_port: {{ rke2_kubelet_port }}
+        - rke2_https_port: {{ rke2_https_port }}
+    success_msg: "Port values validated"
+  run_once: true
+  tags:
+    - always
+    - validation
+
+# -----------------------------------------------------------------------------
 # Configuration File Path Validation
 # -----------------------------------------------------------------------------
 - name: Validate audit policy file exists
@@ -73,8 +99,7 @@
   delegate_to: localhost
   become: false
   when: rke2_audit_policy_config_file_path | length > 0
-  failed_when:
-    - not _audit_policy_file.stat.exists
+  failed_when: not _audit_policy_file.stat.exists
   tags:
     - always
     - validation
@@ -86,8 +111,7 @@
   delegate_to: localhost
   become: false
   when: rke2_registry_config_file_path | length > 0
-  failed_when:
-    - not _registry_config_file.stat.exists
+  failed_when: not _registry_config_file.stat.exists
   tags:
     - always
     - validation
@@ -99,8 +123,7 @@
   delegate_to: localhost
   become: false
   when: rke2_pod_security_admission_config_file_path | length > 0
-  failed_when:
-    - not _psa_config_file.stat.exists
+  failed_when: not _psa_config_file.stat.exists
   tags:
     - always
     - validation
@@ -112,8 +135,7 @@
   delegate_to: localhost
   become: false
   when: rke2_systemd_env_config_file_path | length > 0
-  failed_when:
-    - not _systemd_env_file.stat.exists
+  failed_when: not _systemd_env_file.stat.exists
   tags:
     - always
     - validation
@@ -125,9 +147,7 @@
   delegate_to: localhost
   become: false
   when: rke2_manifest_config_directory | length > 0
-  failed_when:
-    - not _manifest_dir.stat.exists
-    - not _manifest_dir.stat.isdir
+  failed_when: not (_manifest_dir.stat.exists and _manifest_dir.stat.isdir)
   tags:
     - always
     - validation
@@ -139,9 +159,7 @@
   delegate_to: localhost
   become: false
   when: rke2_manifest_config_post_run_directory | length > 0
-  failed_when:
-    - not _manifest_post_dir.stat.exists
-    - not _manifest_post_dir.stat.isdir
+  failed_when: not (_manifest_post_dir.stat.exists and _manifest_post_dir.stat.isdir)
   tags:
     - always
     - validation

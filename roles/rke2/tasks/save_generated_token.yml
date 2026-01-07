@@ -14,7 +14,7 @@
     path: "{{ rke2_data_dir }}/server/node-token"
   register: _token_file
   delegate_to: "{{ token_source_node }}"
-  failed_when: _token_file.stat.size == 0
+  failed_when: not _token_file.stat.exists or _token_file.stat.size == 0
 
 - name: Read node token from server
   ansible.builtin.slurp:

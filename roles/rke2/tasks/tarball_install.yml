@@ -72,7 +72,7 @@
 
     - name: Parse tarball RKE2 version
       ansible.builtin.set_fact:
-        rke2_tarball_version: "{{ rke2_tarball_version_output.stdout | regex_search('rke2 version (v[0-9.]+\\+rke2r[0-9]+)', '\\1') | first }}"
+        rke2_tarball_version: "{{ rke2_tarball_version_output.stdout | regex_search('rke2 version (v[0-9.]+[-+]rke2r[0-9]+[^ ]*)', '\\1') | first }}"
 
     - name: Check if tarball version differs from installed
       ansible.builtin.set_fact:
@@ -115,14 +115,16 @@
         path: "{{ rke2_tarball_install_dir }}/lib/systemd/system/rke2-server.service"
         regexp: '/usr/local'
         replace: '{{ rke2_tarball_install_dir }}'
-      notify: Restart rke2-server
+      notify: "Restart {{ service_name }}"
+      when: inventory_hostname in groups['rke2_servers']
 
     - name: Update rke2-agent.service paths
       ansible.builtin.replace:
         path: "{{ rke2_tarball_install_dir }}/lib/systemd/system/rke2-agent.service"
         regexp: '/usr/local'
         replace: '{{ rke2_tarball_install_dir }}'
-      notify: Restart rke2-agent
+      notify: "Restart {{ service_name }}"
+      when: inventory_hostname in groups.get('rke2_agents', [])
 
     - name: Update rke2-uninstall.sh paths
       ansible.builtin.replace:

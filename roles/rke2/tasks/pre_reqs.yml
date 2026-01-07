@@ -10,7 +10,7 @@
   notify: "Restart {{ service_name }}"
 
 - name: Apply NetworkManager configuration
-  ansible.builtin.include_tasks: network_manager_fix.yaml
+  ansible.builtin.include_tasks: network_manager_fix.yml
 
 - name: Configure iptables rules
   ansible.builtin.include_tasks: iptables_rules.yml

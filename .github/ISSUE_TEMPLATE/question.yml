@@ -1,0 +1,69 @@
+name: Question
+description: Ask a question about usage or configuration
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question? We're here to help!
+        Please check the [documentation](https://github.com/ashimov/rke2-ansible/tree/main/docs) first.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm you've done the following
+      options:
+        - label: I have read the [documentation](https://github.com/ashimov/rke2-ansible/tree/main/docs)
+          required: true
+        - label: I have searched existing [issues](https://github.com/ashimov/rke2-ansible/issues) for similar questions
+          required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: How do I...?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Topic
+      description: What area is your question about?
+      options:
+        - Installation / Setup
+        - Configuration
+        - High Availability
+        - Upgrades
+        - Air-gap / Tarball Installation
+        - SELinux / Security
+        - CIS Hardening
+        - Networking
+        - Storage
+        - Backup / Restore
+        - Monitoring
+        - Troubleshooting
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide any relevant context that might help us answer your question.
+      placeholder: |
+        - Environment details
+        - What you're trying to achieve
+        - What you've already tried
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Current Configuration
+      description: If relevant, share your current configuration (remove sensitive data).
+      render: yaml

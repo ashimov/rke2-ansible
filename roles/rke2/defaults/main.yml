@@ -35,6 +35,7 @@ rke2_kubelet_port: 10250
 rke2_etcd_client_port: 2379
 rke2_etcd_peer_port: 2380
 rke2_flannel_port: 8472
+rke2_https_port: 443
 rke2_nodeport_range: "30000:32767"
 rke2_cluster_cidr: "10.42.0.0/16"
 

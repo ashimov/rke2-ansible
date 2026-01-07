@@ -1,0 +1,59 @@
+---
+# =============================================================================
+# Cluster Health Check
+# =============================================================================
+# Final validation that the cluster is healthy after deployment
+
+- name: Verify all nodes are Ready
+  ansible.builtin.command: >-
+    {{ rke2_bin_path }}/kubectl
+    --kubeconfig {{ rke2_kubeconfig_path }}
+    get nodes -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}'
+  register: _nodes_ready_status
+  changed_when: false
+  failed_when: "'False' in _nodes_ready_status.stdout or 'Unknown' in _nodes_ready_status.stdout"
+  retries: 3
+  delay: 10
+
+- name: Get cluster node count
+  ansible.builtin.command: >-
+    {{ rke2_bin_path }}/kubectl
+    --kubeconfig {{ rke2_kubeconfig_path }}
+    get nodes --no-headers -o name
+  register: _cluster_nodes
+  changed_when: false
+
+- name: Verify expected node count
+  ansible.builtin.assert:
+    that:
+      - _cluster_nodes.stdout_lines | length == (groups['rke2_servers'] | length + groups.get('rke2_agents', []) | length)
+    fail_msg: |
+      Expected {{ groups['rke2_servers'] | length + groups.get('rke2_agents', []) | length }} nodes,
+      but found {{ _cluster_nodes.stdout_lines | length }} in the cluster
+    success_msg: "All {{ _cluster_nodes.stdout_lines | length }} nodes are present in the cluster"
+
+- name: Check critical system pods are running
+  ansible.builtin.command: >-
+    {{ rke2_bin_path }}/kubectl
+    --kubeconfig {{ rke2_kubeconfig_path }}
+    get pods -n kube-system
+    -l 'k8s-app in (kube-dns,canal,calico-node)'
+    -o jsonpath='{.items[*].status.phase}'
+  register: _system_pods_status
+  changed_when: false
+  failed_when: "'Pending' in _system_pods_status.stdout or 'Failed' in _system_pods_status.stdout"
+  retries: 5
+  delay: 15
+
+- name: Display cluster health summary
+  ansible.builtin.debug:
+    msg: |
+      ========================================
+      Cluster Health Check: PASSED
+      ========================================
+      Total nodes: {{ _cluster_nodes.stdout_lines | length }}
+      - Servers: {{ groups['rke2_servers'] | length }}
+      - Agents: {{ groups.get('rke2_agents', []) | length }}
+      All nodes Ready: YES
+      System pods healthy: YES
+      ========================================

@@ -2,21 +2,56 @@
 namespace: ashimov
 name: rke2_ansible
 version: 1.0.0
+
 readme: README.md
+license_file: LICENSE
+
 authors:
-  - ashimov
-description: Collection for ashimov/rke2-ansible
+  - ashimov <ashimov@users.noreply.github.com>
 
-license_file: 'LICENSE'
+description: >-
+  Ansible collection for automated deployment and management of RKE2
+  (Rancher Kubernetes Engine 2) clusters. Supports multi-OS environments,
+  high availability configurations, CIS hardening, SELinux, and air-gap
+  installations.
 
-tags: [infrastructure, linux, kubernetes, rancher, rke2]
+tags:
+  - infrastructure
+  - linux
+  - kubernetes
+  - rancher
+  - rke2
+  - k8s
+  - cluster
+  - container
+  - orchestration
+  - devops
+  - automation
+  - ha
+  - security
+  - cis
+
+dependencies: {}
 
 repository: https://github.com/ashimov/rke2-ansible
-documentation: https://github.com/ashimov/rke2-ansible
+documentation: https://github.com/ashimov/rke2-ansible/tree/main/docs
 homepage: https://github.com/ashimov/rke2-ansible
 issues: https://github.com/ashimov/rke2-ansible/issues
 
 build_ignore:
+  - .git
+  - .github
+  - .gitignore
+  - .pre-commit-config.yaml
+  - .yamllint.yml
+  - .ansible-lint
+  - .secrets.baseline
+  - .vale.ini
   - tarball_install/*
   - testing
-  - .github
+  - molecule
+  - venv
+  - .venv
+  - "*.tar.gz"
+  - __pycache__
+  - "*.pyc"

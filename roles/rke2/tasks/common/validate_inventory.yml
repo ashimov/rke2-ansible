@@ -1,4 +1,11 @@
 ---
+# =============================================================================
+# Inventory and Configuration Validation
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Inventory Group Validation
+# -----------------------------------------------------------------------------
 - name: Validate required inventory groups exist
   ansible.builtin.assert:
     that:
@@ -17,6 +24,124 @@
       - inventory_hostname in groups['rke2_servers'] or inventory_hostname in groups.get('rke2_agents', [])
     fail_msg: "Host {{ inventory_hostname }} must be in 'rke2_servers' or 'rke2_agents' group"
     success_msg: "Host {{ inventory_hostname }} group membership validated"
+  tags:
+    - always
+    - validation
+
+# -----------------------------------------------------------------------------
+# Timeout Value Validation
+# -----------------------------------------------------------------------------
+- name: Validate timeout values are within acceptable range
+  ansible.builtin.assert:
+    that:
+      - rke2_api_wait_timeout | int >= 30
+      - rke2_api_wait_timeout | int <= 3600
+      - rke2_node_ready_timeout | int >= 30
+      - rke2_node_ready_timeout | int <= 3600
+      - rke2_node_ready_retries | int >= 1
+      - rke2_node_ready_retries | int <= 100
+      - rke2_node_ready_delay | int >= 1
+      - rke2_node_ready_delay | int <= 300
+      - rke2_kubelet_check_retries | int >= 1
+      - rke2_kubelet_check_retries | int <= 100
+      - rke2_kubelet_check_delay | int >= 1
+      - rke2_kubelet_check_delay | int <= 300
+      - rke2_reboot_timeout | int >= 60
+      - rke2_reboot_timeout | int <= 1800
+    fail_msg: |
+      Timeout values out of acceptable range:
+        - rke2_api_wait_timeout: 30-3600 seconds (current: {{ rke2_api_wait_timeout }})
+        - rke2_node_ready_timeout: 30-3600 seconds (current: {{ rke2_node_ready_timeout }})
+        - rke2_node_ready_retries: 1-100 (current: {{ rke2_node_ready_retries }})
+        - rke2_node_ready_delay: 1-300 seconds (current: {{ rke2_node_ready_delay }})
+        - rke2_kubelet_check_retries: 1-100 (current: {{ rke2_kubelet_check_retries }})
+        - rke2_kubelet_check_delay: 1-300 seconds (current: {{ rke2_kubelet_check_delay }})
+        - rke2_reboot_timeout: 60-1800 seconds (current: {{ rke2_reboot_timeout }})
+    success_msg: "Timeout values validated"
+  run_once: true
+  tags:
+    - always
+    - validation
+
+# -----------------------------------------------------------------------------
+# Configuration File Path Validation
+# -----------------------------------------------------------------------------
+- name: Validate audit policy file exists
+  ansible.builtin.stat:
+    path: "{{ rke2_audit_policy_config_file_path }}"
+  register: _audit_policy_file
+  delegate_to: localhost
+  become: false
+  when: rke2_audit_policy_config_file_path | length > 0
+  failed_when:
+    - not _audit_policy_file.stat.exists
+  tags:
+    - always
+    - validation
+
+- name: Validate registry config file exists
+  ansible.builtin.stat:
+    path: "{{ rke2_registry_config_file_path }}"
+  register: _registry_config_file
+  delegate_to: localhost
+  become: false
+  when: rke2_registry_config_file_path | length > 0
+  failed_when:
+    - not _registry_config_file.stat.exists
+  tags:
+    - always
+    - validation
+
+- name: Validate pod security admission config file exists
+  ansible.builtin.stat:
+    path: "{{ rke2_pod_security_admission_config_file_path }}"
+  register: _psa_config_file
+  delegate_to: localhost
+  become: false
+  when: rke2_pod_security_admission_config_file_path | length > 0
+  failed_when:
+    - not _psa_config_file.stat.exists
+  tags:
+    - always
+    - validation
+
+- name: Validate systemd env config file exists
+  ansible.builtin.stat:
+    path: "{{ rke2_systemd_env_config_file_path }}"
+  register: _systemd_env_file
+  delegate_to: localhost
+  become: false
+  when: rke2_systemd_env_config_file_path | length > 0
+  failed_when:
+    - not _systemd_env_file.stat.exists
+  tags:
+    - always
+    - validation
+
+- name: Validate manifest config directory exists
+  ansible.builtin.stat:
+    path: "{{ rke2_manifest_config_directory }}"
+  register: _manifest_dir
+  delegate_to: localhost
+  become: false
+  when: rke2_manifest_config_directory | length > 0
+  failed_when:
+    - not _manifest_dir.stat.exists
+    - not _manifest_dir.stat.isdir
+  tags:
+    - always
+    - validation
+
+- name: Validate post-run manifest config directory exists
+  ansible.builtin.stat:
+    path: "{{ rke2_manifest_config_post_run_directory }}"
+  register: _manifest_post_dir
+  delegate_to: localhost
+  become: false
+  when: rke2_manifest_config_post_run_directory | length > 0
+  failed_when:
+    - not _manifest_post_dir.stat.exists
+    - not _manifest_post_dir.stat.isdir
   tags:
     - always
     - validation

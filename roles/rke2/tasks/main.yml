@@ -215,3 +215,13 @@
   tags:
     - post-install
     - manifests
+
+# -----------------------------------------------------------------------------
+# Cluster Health Verification
+# -----------------------------------------------------------------------------
+- name: Verify cluster health
+  ansible.builtin.include_tasks: cluster_health_check.yml
+  when: inventory_hostname == groups['rke2_servers'][0]
+  tags:
+    - post-install
+    - health-check

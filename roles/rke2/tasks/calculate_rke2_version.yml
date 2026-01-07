@@ -36,7 +36,7 @@
 
 - name: Calculate RPM version components
   when:
-    - install_method == "rpm"
+    - rke2_install_method == "rpm"
     - rke2_full_version | default('') | length > 0
   block:
     - name: Extract major.minor version

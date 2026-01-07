@@ -6,7 +6,7 @@
     - ansible_facts.services["rke2-server.service"] is defined
     - ansible_facts.services["rke2-server.service"].status != 'disabled'
     - inventory_hostname in groups['rke2_servers']
-    - install_method == "tarball"
+    - rke2_install_method == "tarball"
 
 - name: Check if rke2-server is running
   ansible.builtin.set_fact:
@@ -23,7 +23,7 @@
     - ansible_facts.services["rke2-agent.service"] is defined
     - ansible_facts.services["rke2-agent.service"].status != 'disabled'
     - inventory_hostname in groups.get('rke2_agents', [])
-    - install_method == "tarball"
+    - rke2_install_method == "tarball"
 
 - name: Check if rke2-agent is running
   ansible.builtin.set_fact:
@@ -46,13 +46,13 @@
   changed_when: false
   failed_when: false
   when:
-    - install_method == "tarball"
+    - rke2_install_method == "tarball"
     - rke2_binary.stat.exists | default(false)
 
 - name: Parse installed RKE2 version
   ansible.builtin.set_fact:
     rke2_installed_version: "{{ rke2_version_output.stdout | regex_search('rke2 version (v[0-9.]+\\+rke2r[0-9]+)', '\\1') | first | default('') }}"
   when:
-    - install_method == "tarball"
+    - rke2_install_method == "tarball"
     - rke2_binary.stat.exists | default(false)
     - rke2_version_output.rc == 0

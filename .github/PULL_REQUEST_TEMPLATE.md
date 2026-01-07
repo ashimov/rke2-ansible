@@ -1,71 +1,63 @@
-<!--
-  This template provides some ideas of things to include in your PR description.
-  To start, try providing a short summary of your changes in the Title above.
-  If a section of the PR template does not apply to this PR, then delete that section.
- -->
+# Pull Request
 
-## What type of PR is this?
+## Description
 
-_(REQUIRED)_
+<!-- Describe your changes in detail -->
 
-- [ ] bug
-- [ ] cleanup
-- [ ] documentation
-- [ ] feature
+## Related Issue
 
-## What this PR does / why we need it:
+<!-- Link to the issue this PR addresses (if applicable) -->
+<!-- Fixes #123 -->
 
-_(REQUIRED)_
+## Type of Change
 
-<!--
-  What goal is this change working towards?
-  Provide a bullet pointed summary of how each file was changed.
-  Briefly explain any decisions you made with respect to the changes.
-  Include anything here that you didn't include in *Release Notes*
-  above, such as changes to CI or changes to internal methods.
--->
+<!-- Mark the appropriate option with an [x] -->
 
-## Which issue(s) this PR fixes:
+- [ ] Bug fix (non-breaking change that fixes an issue)
+- [ ] New feature (non-breaking change that adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to change)
+- [ ] Documentation update
+- [ ] Code refactoring
+- [ ] CI/CD changes
+- [ ] Other (please describe):
 
-_(REQUIRED)_
-<!--
-If this PR fixes one of more issues, list them here.
-One line each, like so:
+## Checklist
 
-Fixes #123
-Fixes #39
--->
+<!-- Mark completed items with an [x] -->
 
-## Special notes for your reviewer:
+### Code Quality
 
-_(fill-in or delete this section)_
+- [ ] My code follows the project's style guidelines
+- [ ] I have performed a self-review of my code
+- [ ] I have commented my code where necessary
+- [ ] My changes generate no new warnings
 
-<!--
-   Is there any particular feedback you would / wouldn't like?
-   Which parts of the code should reviewers focus on?
--->
+### Testing
 
-## Testing
+- [ ] I have tested my changes locally
+- [ ] I have tested on supported operating systems (if applicable)
+- [ ] Existing tests pass with my changes
+- [ ] I have added tests that prove my fix/feature works (if applicable)
 
-_(fill-in or delete this section)_
+### Documentation
 
-<!--
-  Describe how you tested this change.
--->
+- [ ] I have updated the documentation accordingly
+- [ ] I have updated the CHANGELOG (if applicable)
 
-## Release Notes
+## Test Configuration
 
-_(REQUIRED)_
-<!--
-  If this PR makes user facing changes, please describe them here. This
-  description will be copied into the release notes/changelog, whenever the
-  next version is released. Keep this section short, and focus on high level
-  changes.
+<!-- Describe your test environment -->
 
-  Put your text between the block. To omit notes, use NONE within the block.
--->
+- **Ansible version**:
+- **Python version**:
+- **Target OS**:
+- **RKE2 version**:
+- **Installation method**: RPM / Tarball
 
-```release-note
+## Screenshots / Output
 
-```
+<!-- If applicable, add screenshots or command output to demonstrate changes -->
 
+## Additional Notes
+
+<!-- Any additional information that reviewers should know -->

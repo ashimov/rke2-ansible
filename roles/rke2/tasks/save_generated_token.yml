@@ -6,7 +6,15 @@
 - name: Wait for node token file
   ansible.builtin.wait_for:
     path: "{{ rke2_data_dir }}/server/node-token"
+    timeout: "{{ rke2_api_wait_timeout }}"
   delegate_to: "{{ token_source_node }}"
+
+- name: Validate token file is not empty
+  ansible.builtin.stat:
+    path: "{{ rke2_data_dir }}/server/node-token"
+  register: _token_file
+  delegate_to: "{{ token_source_node }}"
+  failed_when: _token_file.stat.size == 0
 
 - name: Read node token from server
   ansible.builtin.slurp:

@@ -30,7 +30,7 @@
         group: root
       register: sysctl_rpm
       when:
-        - install_method == "rpm"
+        - rke2_install_method == "rpm"
       notify:
         - Restart systemd-sysctl
         - "Restart {{ service_name }}"
@@ -46,7 +46,7 @@
         group: root
       register: sysctl_tarball
       when:
-        - install_method == "tarball"
+        - rke2_install_method == "tarball"
       notify:
         - Restart systemd-sysctl
         - "Restart {{ service_name }}"
